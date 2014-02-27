@@ -15,6 +15,7 @@ A bit of setup is required to get this plugin up and running.
 This plugin uses [node-sass](https://github.com/andrew/node-sass) to render SASS performantly. This package implements a C library, so the host machine's architecture taken into account. Unfortunately, this means you'll most likely have to rebuild `node-sass` using [nw-gyp](https://github.com/rogerwang/nw-gyp) so LightTable (more specifically, node-webkit) can understand we're using node-sass without looking at us like we're crazy.
 
 I've prebuilt an OS X binary on my Mac using 10.9 Mavericks and LightTable 0.6.4.
+There is also a prebuilt binary for 64bit Linux.
 
 Other operating systems have pre-placed folders for later reference in case you're rebuilding node-sass.
 
