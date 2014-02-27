@@ -29,7 +29,7 @@ Here's a step-by-step guide to get the package up and running (if this is giving
   - Windows: `cd %APPDATALOCAL%/LightTable/plugins/`
 4. Change directory to the SCSS plugin's node-sass build: `cd scss/node_modules/node-sass`
 5. Rebuild the node-sass binary: `nw-gyp rebuild --target=0.8.4` (LightTable currently uses node-webkit 0.8.4)
-6. Find the proper binary directory, labeled as `[os]-[arch]-v8-[version]`: `ls bin/`. In my case it was `darwin-ia32-v8-3.20`. *NOTE*: node-webkit seems to use Node `3.2.0` and does not currently support 64-bit versions on OS X or Windows.
+6. Find the proper binary directory, labeled as `[os]-[arch]-v8-[version]`: `ls bin/`. In my case it was `darwin-ia32-v8-3.20`. **NOTE**: node-webkit seems to use Node `3.2.0` and does not currently support 64-bit versions on OS X or Windows.
 7. Copy over binding.node to its respective binary directory. For example: `cp build/Release/binding.node bin/darwin-ia32-v8-3.20/binding.node`
 
 You should be good to go! Fire up a browser tab and open a .scss file to start hacking away.
@@ -40,9 +40,22 @@ You should be good to go! Fire up a browser tab and open a .scss file to start h
 
 Evaluation occurs similarly to the CSS plugin:
 
-`ctrl/cmd + Enter` will send the code to a client, either a browser tab or the LightTable UI.
+`ctrl/cmd + Enter` will send the code to a client, either a browser tab or the LightTable UI. Evaluation also occurs automatically on save.
 
-Evaluation also occurs automatically on save.
+`@import` statements are currently supported, but with a stricter syntax. SASS allows for this:
+
+```sass
+@import "foo/bar", "foo/baz";
+```
+
+The plugin currently doesn't support this, so you'll have to write each statement on a separate line:
+
+```sass
+@import "foo/bar";
+@import "foo/baz";
+```
+
+An option to include libraries by default in the configuration file, allowing for the former functionality, is planned for the next release.
 
 ### Compiling CSS Files
 
@@ -56,7 +69,7 @@ To enable file compilation on save by default, add this to your behaviors:
 
 #### Adding a Configuration File
 
-The plugin looks a configuration file *above or next to your source files* named `scss-config.json`.
+The plugin looks a configuration file **above or next to your source files** named `scss-config.json`.
 
 This means two things:
 
@@ -74,7 +87,9 @@ Four options are currently supported:
 }
 ```
 
-If you're thinking _"Hey, that's not enough options!"_ then I suggest you look into a build tool like [grunt](http://gruntjs.com/) or [gulp](http://gulpjs.com/). More functionality is planned for later releases.
+The `src-dir` is where your .scss files live, and the `build-dir` is where you want them compiled. You can also customize the output style as `nested, expanded, compact, or compressed` and control whether or not to show comments in the output files.
+
+If you're thinking *"Hey, that's not enough options!"* then I suggest you look into a build tool like [grunt](http://gruntjs.com/) or [gulp](http://gulpjs.com/). More functionality is planned for later releases.
 
 ## Special Thanks (shoutouts)
 
