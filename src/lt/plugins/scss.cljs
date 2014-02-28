@@ -4,7 +4,7 @@
             [lt.objs.command :as cmd]
             [lt.objs.eval    :as eval]
             [lt.objs.editor  :as ed]
-            [lt.objs.editor.pool  :as pool]
+            [lt.objs.editor.pool :as pool]
             [lt.objs.files   :as files]
             [lt.objs.clients :as clients]
             [lt.objs.plugins :as plugins]
@@ -98,34 +98,27 @@
 ;;; Plugin Reactions
 
 (defn react-enable-compile-on-save [this]
-  (when-not (object/has-tag? this :scss-compile-save)
-    (object/add-tags this [:scss-compile-save])))
+  (println "SCSS: Enabled compile on save.")
+  (object/add-tags this [:scss-compile-save]))
 
-(defn react-toggle-compile-on-save [this]
-  (if (object/has-tag? this :scss-compile-save)
-    (do
-      (println "SCSS: Disabled compile on save.")
-      (object/remove-tags this [:scss-compile-save]))
-    (do
-      (println "SCSS: Enabled compile on save.")
-      (object/add-tags this [:scss-compile-save]))))
+(defn react-disable-compile-on-save [this]
+  (println "SCSS: Disabled compile on save.")
+  (object/remove-tags this [:scss-compile-save]))
 
 (defn react-on-eval [editor]
   (let [code  (ed/->val (:ed @editor))
         info  (assoc (@editor :info) :code code)
         event {:origin editor :info info :saving false}]
-    (println )
     (object/raise scss-lang :eval! event)))
 
 (defn react-eval-on-save [editor]
-  (let [code  (ed/->val (:ed @editor))
-        info  (assoc (@editor :info) :code code)
-        save  (object/has-tag? editor :scss-compile-save)
-        event {:origin editor :info info :saving (not (nil? save))}
-        default-client (-> @editor :client :default)]
-    (println save)
-    (when (and default-client (not (clients/placeholder? default-client)))
-      (object/raise scss-lang :eval! event))))
+  (when-let [default (-> @editor :client :default)]
+    (let [code  (ed/->val (:ed @editor))
+          info  (assoc (@editor :info) :code code)
+          save  (object/has-tag? editor :scss-compile-save)
+          event {:origin editor :info info :saving (not (nil? save))}]
+       (if (or (nil? @default) (not (clients/placeholder? default)))
+         (object/raise scss-lang :eval! event)))))
 
 (defn react-eval! [this event]
   (let [{:keys [info origin saving]} event
@@ -135,11 +128,15 @@
                   (assoc info :code code)
                   :only origin)))
 
-(behavior ::enable-compile-on-save
+(behavior ::scss-enable-compile-on-save
           :triggers #{:object.instant}
           :desc "SCSS: Enable compile on save"
-          :type :user
           :reaction #(react-enable-compile-on-save %))
+
+(behavior ::scss-disable-compile-on-save
+          :triggers #{:object.instant}
+          :desc "SCSS: Disable compile on save"
+          :reaction #(react-disable-compile-on-save %))
 
 (behavior ::on-eval
           :triggers #{:eval, :eval.one}
@@ -153,18 +150,25 @@
           :triggers #{:eval!}
           :reaction #(react-eval! %1 %2))
 
-(behavior ::toggle-compile-on-save
-          :desc "SCSS: Toggle compile on save"
-          :triggers #{:toggle-compile}
-          :reaction #(react-toggle-compile-on-save %))
 
 (object/object* ::scss-lang
                 :tags #{}
-                :behaviors [::eval! ::toggle-compile-on-save]
+                :behaviors [::eval! ::eval-on-save]
                 :triggers #{:eval!})
 
 (def scss-lang (object/create ::scss-lang))
 
+(defn toggle-compile []
+  (let [enable  [::scss-enable-compile-on-save]
+        disable [::scss-disable-compile-on-save]]
+    (if (object/in-tag? :editor ::scss-enable-compile-on-save)
+      (do
+        (object/remove-tag-behaviors :editor.scss enable)
+        (object/tag-behaviors :editor.scss disable))
+      (do
+        (object/remove-tag-behaviors :editor.scss disable)
+        (object/tag-behaviors :editor.scss enable)))))
+
 (cmd/command {:command :scss.toggle-compile
               :desc "SCSS: Toggle compile on save"
-              :exec #(object/raise scss-lang :toggle-compile)})
+              :exec #(toggle-compile)})
