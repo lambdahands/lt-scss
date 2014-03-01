@@ -64,7 +64,7 @@ An option to include libraries by default in the configuration file, allowing fo
 To enable file compilation on save by default, add this to your behaviors:
 
 ```clojure
-(:lt.plugins.scss/enable-compile-on-save)
+:editor.scss [(:lt.plugins.scss/enable-compile-on-save)]
 ```
 
 #### Adding a Configuration File

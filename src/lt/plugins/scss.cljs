@@ -79,7 +79,7 @@
     nil))
 
 (defn finalize-code [info client-path saving]
-  (let [abs-urls    (if client-path true false)
+  (let [abs-urls    (if (or saving (not client-path)) true false)
         file-path   (files/parent (:path info))
         pre-code    (preprocess file-path client-path (:code info) abs-urls)]
     (if (and saving (not (false? config-file)))
@@ -128,12 +128,12 @@
                   (assoc info :code code)
                   :only origin)))
 
-(behavior ::scss-enable-compile-on-save
+(behavior ::enable-compile-on-save
           :triggers #{:object.instant}
           :desc "SCSS: Enable compile on save"
           :reaction #(react-enable-compile-on-save %))
 
-(behavior ::scss-disable-compile-on-save
+(behavior ::disable-compile-on-save
           :triggers #{:object.instant}
           :desc "SCSS: Disable compile on save"
           :reaction #(react-disable-compile-on-save %))
@@ -159,9 +159,9 @@
 (def scss-lang (object/create ::scss-lang))
 
 (defn toggle-compile []
-  (let [enable  [::scss-enable-compile-on-save]
-        disable [::scss-disable-compile-on-save]]
-    (if (object/in-tag? :editor ::scss-enable-compile-on-save)
+  (let [enable  [::enable-compile-on-save]
+        disable [::disable-compile-on-save]]
+    (if (object/in-tag? :editor.scss ::enable-compile-on-save)
       (do
         (object/remove-tag-behaviors :editor.scss enable)
         (object/tag-behaviors :editor.scss disable))
