@@ -42,20 +42,22 @@ Evaluation occurs similarly to the CSS plugin:
 
 `ctrl/cmd + Enter` will send the code to a client, either a browser tab or the LightTable UI. Evaluation also occurs automatically on save.
 
-`@import` statements are currently supported, but with a stricter syntax. SASS allows for this:
+When evaluating without a configuration file, `@import` statements are currently supported, but with a stricter syntax.
+
+SASS allows this:
 
 ```sass
 @import "foo/bar", "foo/baz";
 ```
 
-The plugin currently doesn't support this, so you'll have to write each statement on a separate line:
+But you'll have to write these imports on a new line:
 
 ```sass
 @import "foo/bar";
 @import "foo/baz";
 ```
 
-An option to include libraries by default in the configuration file, allowing for the former functionality, is planned for the next release.
+Again, you only have to follow this convention if you aren't using a configuration file with an `includes` option. See below for further details.
 
 ### Compiling CSS Files
 
@@ -83,11 +85,14 @@ Four options are currently supported:
   "src-dir": "scss",
   "build-dir": "css",
   "output-style": "expanded",
+  "includes": ["lib/"]
   "comments": true
 }
 ```
 
 The `src-dir` is where your .scss files live, and the `build-dir` is where you want them compiled. You can also customize the output style as `nested, expanded, compact, or compressed` and control whether or not to show comments in the output files.
+
+You can include libraries in your configuration file, relative to the directory it lives in. The `includes` option takes an array of strings specifying the folder(s) to look in when using an `@import` statement in your code.
 
 If you're thinking *"Hey, that's not enough options!"* then I suggest you look into a build tool like [grunt](http://gruntjs.com/) or [gulp](http://gulpjs.com/). More functionality is planned for later releases.
 

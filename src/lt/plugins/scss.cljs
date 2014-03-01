@@ -59,14 +59,15 @@
 (defn relativize-imports [[final diff] [import-call path]]
   (string/replace final import-call (str "@import \"" diff "/" path "\";")))
 
-(defn preprocess [file-path client-path code abs-urls]
+(defn preprocess [file-path client-path code abs-urls abs-imports]
   (if (= "." file-path) code)
   (let [imports (re-seq relative-import-pattern code)
         urls    (distinct (re-seq relative-url-pattern code))
         diff    (files/relative (or client-path "") file-path)
         final   (if abs-urls code
                   (reduce #(relativize-urls [%1 diff] %2) code urls))]
-    (reduce #(relativize-imports [%1 diff] %2) final imports)))
+    (if abs-imports code
+      (reduce #(relativize-imports [%1 diff] %2) final imports))))
 
 (defn create-client-specs [info origin]
   {:command :editor.eval.css
@@ -78,22 +79,29 @@
     "LT-UI" (files/lt-home "core/")
     nil))
 
+(defn include-libs? [path config opts]
+  (if-let [includes (js->clj (aget config "includes"))]
+    (let [i (map #(files/join path "/../" %) includes)]
+      [true (merge opts {:includePaths (clj->js (vec i))})])
+    [false opts]))
+
 (defn finalize-code [info client-path saving]
   (let [abs-urls  (if (or saving (not client-path)) true false)
         file-path (files/parent (:path info))
-        pre-code  (preprocess file-path client-path (:code info) abs-urls)]
+        pre-code #(preprocess file-path client-path (:code info) abs-urls %)]
     (if (and saving (not (false? config-file)))
       (let [config-file (find-config file-path)
             config (.parse js/JSON (.readFileSync fs config-file))
             opts   {:outputStyle    (aget config "output-style")
                     :sourceComments (aget config "comments")}
-            sass   (render-sass pre-code opts)]
+            libs?  (include-libs? config-file config opts)
+            sass   (render-sass (pre-code (first libs?)) (last libs?))]
         (. fs outputFileSync
            (files/join
             config-file "/../" (aget config "build-dir") "/"
             (string/replace (:name info) ".scss" ".css")) sass)
         sass)
-      (render-sass pre-code))))
+      (render-sass #(pre-code false)))))
 
 ;;; Plugin Reactions
 
