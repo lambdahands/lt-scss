@@ -79,9 +79,9 @@
     nil))
 
 (defn finalize-code [info client-path saving]
-  (let [abs-urls    (if (or saving (not client-path)) true false)
-        file-path   (files/parent (:path info))
-        pre-code    (preprocess file-path client-path (:code info) abs-urls)]
+  (let [abs-urls  (if (or saving (not client-path)) true false)
+        file-path (files/parent (:path info))
+        pre-code  (preprocess file-path client-path (:code info) abs-urls)]
     (if (and saving (not (false? config-file)))
       (let [config-file (find-config file-path)
             config (.parse js/JSON (.readFileSync fs config-file))
@@ -117,8 +117,11 @@
           info  (assoc (@editor :info) :code code)
           save  (object/has-tag? editor :scss-compile-save)
           event {:origin editor :info info :saving (not (nil? save))}]
-       (if (or (nil? @default) (not (clients/placeholder? default)))
-         (object/raise scss-lang :eval! event)))))
+      (cond
+       (or (nil? @default) (not (clients/placeholder? default)))
+       (object/raise scss-lang :eval! event)
+       save
+       (finalize-code info "" save)))))
 
 (defn react-eval! [this event]
   (let [{:keys [info origin saving]} event
@@ -150,7 +153,6 @@
           :triggers #{:eval!}
           :reaction #(react-eval! %1 %2))
 
-
 (object/object* ::scss-lang
                 :tags #{}
                 :behaviors [::eval! ::eval-on-save]
@@ -159,15 +161,15 @@
 (def scss-lang (object/create ::scss-lang))
 
 (defn toggle-compile []
-  (let [enable  [::enable-compile-on-save]
-        disable [::disable-compile-on-save]]
-    (if (object/in-tag? :editor.scss ::enable-compile-on-save)
+  (let [enable  ::enable-compile-on-save
+        disable ::disable-compile-on-save]
+    (if (object/in-tag? :editor.scss enable)
       (do
-        (object/remove-tag-behaviors :editor.scss enable)
-        (object/tag-behaviors :editor.scss disable))
+        (object/remove-tag-behaviors :editor.scss [enable])
+        (object/tag-behaviors :editor.scss [disable]))
       (do
-        (object/remove-tag-behaviors :editor.scss disable)
-        (object/tag-behaviors :editor.scss enable)))))
+        (object/remove-tag-behaviors :editor.scss [disable])
+        (object/tag-behaviors :editor.scss [enable])))))
 
 (cmd/command {:command :scss.toggle-compile
               :desc "SCSS: Toggle compile on save"
