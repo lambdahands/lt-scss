@@ -27,7 +27,7 @@ Here's a step-by-step guide to get the package up and running (if this is giving
   - OS X: `cd ~/Library/Application Support/LightTable/plugins/`
   - Linux: `cd ~/.config/LightTable/plugins/`
   - Windows: `cd %APPDATALOCAL%/LightTable/plugins/`
-4. Change directory to the SCSS plugin's node-sass build: `cd scss/node_modules/node-sass`
+4. Change directory to the SCSS plugin's node-sass build: `cd SCSS/node_modules/node-sass`
 5. Rebuild the node-sass binary: `nw-gyp rebuild --target=0.8.4` (LightTable currently uses node-webkit 0.8.4)
 6. Find the proper binary directory, labeled as `[os]-[arch]-v8-[version]`: `ls bin/`. In my case it was `darwin-ia32-v8-3.20`. **NOTE**: node-webkit seems to use Node `3.2.0` and does not currently support 64-bit versions on OS X or Windows.
 7. Copy over binding.node to its respective binary directory. For example: `cp build/Release/binding.node bin/darwin-ia32-v8-3.20/binding.node`
@@ -69,6 +69,9 @@ To enable file compilation on save by default, add this to your behaviors:
 :editor.scss [(:lt.plugins.scss/enable-compile-on-save)]
 ```
 
+If at any point you want to toggle this behavior, open the command bar and search for:
+`SCSS: Toggle compile on save`
+
 #### Adding a Configuration File
 
 The plugin looks a configuration file **above or next to your source files** named `scss-config.json`.
@@ -85,7 +88,7 @@ Four options are currently supported:
   "src-dir": "scss",
   "build-dir": "css",
   "output-style": "expanded",
-  "includes": ["lib/"]
+  "includes": ["lib/"],
   "comments": true
 }
 ```
@@ -94,7 +97,7 @@ The `src-dir` is where your .scss files live, and the `build-dir` is where you w
 
 You can include libraries in your configuration file, relative to the directory it lives in. The `includes` option takes an array of strings specifying the folder(s) to look in when using an `@import` statement in your code.
 
-If you're thinking *"Hey, that's not enough options!"* then I suggest you look into a build tool like [grunt](http://gruntjs.com/) or [gulp](http://gulpjs.com/). More functionality is planned for later releases.
+If you're thinking *"Hey, that's not enough options!"* then I suggest you look into a build tool like [grunt](http://gruntjs.com/) or [gulp](http://gulpjs.com/). More functionality is planned for later releases, such as watching folders.
 
 ## Special Thanks (shoutouts)
 
