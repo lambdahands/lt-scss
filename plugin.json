@@ -3,7 +3,7 @@
   "author": "Philip Joseph",
   "version": "0.0.2",
   "source": "https://github.com/lambdahands/lt-scss",
-  "desc": "An experimental SCSS plugin for Light Table",
+  "desc": "A SCSS plugin for Light Table",
   "dependencies": {
   },
   "behaviors": "scss.behaviors"

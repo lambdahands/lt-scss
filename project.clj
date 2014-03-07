@@ -1,3 +1,3 @@
 (defproject com.lighttable/scss "0.0.2"
-  :description "SCSS for Light Table"
+  :description "A SCSS plugin for Light Table"
   :dependencies [[org.clojure/clojure "1.5.1"]])
