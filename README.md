@@ -1,6 +1,6 @@
 ## SCSS for Light Table
 
-An experimental SCSS plugin for Light Table.
+A SCSS plugin for Light Table.
 
 ## Installation
 

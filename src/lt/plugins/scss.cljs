@@ -85,23 +85,30 @@
       [true (merge opts {:includePaths (clj->js (vec i))})])
     [false opts]))
 
+(defn write-css [config-file build-dir file-name code]
+  (when-not (= (first file-name) \_)
+    (. fs outputFileSync
+       (files/join
+        config-file "/../" build-dir "/"
+        (string/replace file-name ".scss" ".css"))
+       code)))
+
 (defn finalize-code [info client-path saving]
-  (let [abs-urls  (if (or saving (not client-path)) true false)
+  (let [abs-urls  (or saving (not client-path))
         file-path (files/parent (:path info))
-        pre-code #(preprocess file-path client-path (:code info) abs-urls %)]
-    (if (and saving (not (false? config-file)))
-      (let [config-file (find-config file-path)
-            config (.parse js/JSON (.readFileSync fs config-file))
-            opts   {:outputStyle    (aget config "output-style")
-                    :sourceComments (aget config "comments")}
-            libs?  (include-libs? config-file config opts)
-            sass   (render-sass (pre-code (first libs?)) (last libs?))]
-        (. fs outputFileSync
-           (files/join
-            config-file "/../" (aget config "build-dir") "/"
-            (string/replace (:name info) ".scss" ".css")) sass)
-        sass)
-      (render-sass #(pre-code false)))))
+        pre-code #(preprocess file-path client-path (:code info) abs-urls %)
+        config-file (find-config file-path)]
+      (if (not (false? config-file))
+        (let [config (.parse js/JSON (.readFileSync fs config-file))
+              opts   {:outputStyle    (aget config "output-style")
+                      :sourceComments (aget config "comments")}
+              libs?  (include-libs? config-file config opts)
+              sass   (render-sass (pre-code (first libs?)) (last libs?))]
+          (when saving
+            (write-css
+             config-file (aget config "build-dir") (:name info) sass))
+          sass)
+        (render-sass (pre-code false)))))
 
 ;;; Plugin Reactions
 
@@ -120,16 +127,21 @@
     (object/raise scss-lang :eval! event)))
 
 (defn react-eval-on-save [editor]
-  (when-let [default (-> @editor :client :default)]
+  (if-let [default (-> @editor :client :default)]
     (let [code  (ed/->val (:ed @editor))
           info  (assoc (@editor :info) :code code)
           save  (object/has-tag? editor :scss-compile-save)
           event {:origin editor :info info :saving (not (nil? save))}]
       (cond
-       (or (nil? @default) (not (clients/placeholder? default)))
+       (or (and (:client @editor) (nil? @default))
+           (not (clients/placeholder? default)))
        (object/raise scss-lang :eval! event)
        save
-       (finalize-code info "" save)))))
+       (finalize-code info "" save)))
+    (if-let [save (not (nil? (object/has-tag? editor :scss-compile-save)))]
+      (let [code (ed/->val (:ed @editor))
+            info (assoc (@editor :info) :code code)]
+        (finalize-code info "" save)))))
 
 (defn react-eval! [this event]
   (let [{:keys [info origin saving]} event
