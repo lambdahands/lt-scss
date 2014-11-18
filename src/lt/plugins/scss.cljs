@@ -14,11 +14,11 @@
 (defn node-require [mod-path]
   (js/require (files/join plugins/user-plugins-dir mod-path)))
 
-(def fs (node-require "scss/node_modules/fs-extra"))
+(def fs (node-require "SCSS/node_modules/fs-extra"))
 
 (def node-sass
   (try
-    (node-require "scss/node_modules/node-sass")
+    (node-require "SCSS/node_modules/node-sass")
     (catch (.-Error js/global) e
       (let [match (re-seq #"Try reinstalling `node-sass`?" (.-message e))
             errmsg
